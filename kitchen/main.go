@@ -45,7 +45,7 @@ func main() {
 	)
 	failOnError(err, "Failed to delare a queue")
 
-	log.Printf("Binding queue %s to exchange %s with routing key orderch", q.Name, "logs_direct")
+	log.Printf("Binding queue %s to exchange %s with no route key", q.Name, "paid")
 	err = ch.QueueBind(
 		q.Name,
 		"",

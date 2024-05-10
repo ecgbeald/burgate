@@ -11,14 +11,23 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", "order:8889", "addr to connect")
-	conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	status := flag.Bool("local", false, "toggle for local deployment")
+	flag.Parse()
+	if *status {
+		log.Print("Running Locally")
+	}
+
+	var conn *grpc.ClientConn
+	var err error
+	if *status {
+		conn, err = grpc.Dial(":8889", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		conn, err = grpc.Dial("order:8889", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
 	if err != nil {
 		log.Fatal("Fail to dial server", err)
 	}
 	defer conn.Close()
-
-	log.Println("dialing orders service at :8889")
 
 	cli := pb.NewOrderServiceClient(conn)
 

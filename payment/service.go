@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"log"
 	"time"
 
@@ -17,7 +18,19 @@ func failOnError(err error, msg string) {
 }
 
 func main() {
-	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
+	status := flag.Bool("local", false, "toggle for local deployment")
+	flag.Parse()
+	if *status {
+		log.Print("Running Locally")
+	}
+	var conn *amqp.Connection
+	var err error
+	if *status {
+		conn, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
+	} else {
+		conn, err = amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
+	}
+
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 

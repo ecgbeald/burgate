@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
@@ -10,7 +11,8 @@ import (
 )
 
 func main() {
-	conn, err := grpc.Dial(":8889", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	addr := flag.String("addr", "order:8889", "addr to connect")
+	conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal("Fail to dial server", err)
 	}

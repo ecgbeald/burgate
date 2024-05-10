@@ -27,7 +27,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	mongoClientOptions := options.Client().ApplyURI("mongodb://admin:admin@localhost:27017")
+	mongoClientOptions := options.Client().ApplyURI("mongodb://admin:admin@mongo:27017")
 	mongoCli, err := mongo.Connect(ctx, mongoClientOptions)
 	failOnError(err, "Failed to connect to MongoDB")
 
@@ -36,7 +36,7 @@ func main() {
 
 	log.Println("Connected to MongoDB")
 
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 

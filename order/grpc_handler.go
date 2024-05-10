@@ -12,31 +12,22 @@ import (
 	"google.golang.org/grpc"
 )
 
-type menu_entry struct {
-	name     string
-	price_id string
-}
-
-var menu = map[string]menu_entry{
-	"1": {"nuggies", "1"},
-	"2": {"oolong", "2"},
-}
-
 type grpc_handler struct {
+	store   OrderStore
 	service OrderService
 	ch      *amqp.Channel
 	pb.UnimplementedOrderServiceServer
 }
 
-func NewGRPCHandler(grpcServer *grpc.Server, service OrderService, ch *amqp.Channel) {
-	handler := &grpc_handler{service: service, ch: ch}
+func NewGRPCHandler(grpcServer *grpc.Server, store OrderStore, service OrderService, ch *amqp.Channel) {
+	handler := &grpc_handler{store: store, service: service, ch: ch}
 	pb.RegisterOrderServiceServer(grpcServer, handler)
 }
 
 func (gh *grpc_handler) CreateOrder(ctx context.Context, request *pb.CreateOrderRequest) (*pb.Order, error) {
 	log.Print("New order received from cust id: ", request.CustomerID)
 
-	o := ConvertItem(request)
+	o := convertItem(ctx, request, gh.store)
 
 	body, err := json.Marshal(o)
 	if err != nil {
@@ -62,18 +53,30 @@ func (gh *grpc_handler) CreateOrder(ctx context.Context, request *pb.CreateOrder
 	return o, nil
 }
 
-func ConvertItem(request *pb.CreateOrderRequest) *pb.Order {
+func validateQuery(ctx context.Context, store OrderStore, item *pb.ItemsWithQuantity) (*pb.Item, error) {
+	results, err := store.Query(ctx, item.ID)
+	if err != nil {
+		return nil, err
+	}
+	mostRecent := (*results)[0]
+	return &pb.Item{
+		ID:       item.ID,
+		Name:     mostRecent.Name,
+		Quantity: item.Quantity,
+		PriceID:  mostRecent.Price_id,
+	}, nil
+}
+
+func convertItem(ctx context.Context, request *pb.CreateOrderRequest, store OrderStore) *pb.Order {
 	uuid := uuid.New()
 	items := make([]*pb.Item, len(request.Items))
 	custID := request.CustomerID
 	for i, item := range request.Items {
-		converted := menu[item.ID]
-		items[i] = &pb.Item{
-			ID:       item.ID,
-			Name:     converted.name,
-			Quantity: item.Quantity,
-			PriceID:  converted.price_id,
+		res, err := validateQuery(ctx, store, item)
+		if err != nil {
+			log.Fatal("Failed to fetch from database")
 		}
+		items[i] = res
 	}
 	return &pb.Order{
 		ID:         uuid.String(),

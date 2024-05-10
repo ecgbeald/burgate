@@ -82,6 +82,8 @@ func main() {
 				continue
 			}
 			log.Printf("Received a message: %s", dat)
+			log.Printf("Waiting for payment...")
+			time.Sleep(4 * time.Second)
 			dat.Status = "Paid"
 
 			d.Ack(false)

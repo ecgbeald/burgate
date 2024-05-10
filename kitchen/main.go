@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -78,6 +79,8 @@ func main() {
 				continue
 			}
 			log.Printf("Received a message: %s", dat)
+			log.Printf("Cooking...")
+			time.Sleep(5 * time.Second)
 			d.Ack(false)
 		}
 	}()

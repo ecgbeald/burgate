@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 )
 
@@ -20,6 +23,18 @@ func main() {
 	}
 
 	defer l.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	mongoClientOptions := options.Client().ApplyURI("mongodb://admin:admin@localhost:27017")
+	mongoCli, err := mongo.Connect(ctx, mongoClientOptions)
+	failOnError(err, "Failed to connect to MongoDB")
+
+	err = mongoCli.Ping(ctx, nil)
+	failOnError(err, "Failed to ping MongoDB")
+
+	log.Println("Connected to MongoDB")
 
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
@@ -97,12 +112,13 @@ func main() {
 		}
 	}()
 
-	store := NewStore()
+	store := NewStore(mongoCli)
+	store.Create(ctx)
 	service := NewOrderService(store, ch)
 
 	service.CreateOrder(context.Background())
 
-	NewGRPCHandler(grpcServer, service, ch)
+	NewGRPCHandler(grpcServer, store, service, ch)
 
 	log.Printf("GRPC server started at 8889")
 

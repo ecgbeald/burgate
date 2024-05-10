@@ -54,29 +54,29 @@ func (gh *grpc_handler) CreateOrder(ctx context.Context, request *pb.CreateOrder
 }
 
 func validateQuery(ctx context.Context, store OrderStore, item *pb.ItemsWithQuantity) (*pb.Item, error) {
-	results, err := store.Query(ctx, item.ID)
+	result, err := store.Query(ctx, item.ID)
 	if err != nil {
 		return nil, err
 	}
-	mostRecent := (*results)[0]
 	return &pb.Item{
 		ID:       item.ID,
-		Name:     mostRecent.Name,
+		Name:     result.Name,
 		Quantity: item.Quantity,
-		PriceID:  mostRecent.Price_id,
+		PriceID:  result.Price_id,
 	}, nil
 }
 
 func convertItem(ctx context.Context, request *pb.CreateOrderRequest, store OrderStore) *pb.Order {
 	uuid := uuid.New()
-	items := make([]*pb.Item, len(request.Items))
+	var items []*pb.Item
 	custID := request.CustomerID
-	for i, item := range request.Items {
+	for _, item := range request.Items {
 		res, err := validateQuery(ctx, store, item)
 		if err != nil {
-			log.Fatal("Failed to fetch from database")
+			log.Print("Failed to fetch from database:", err)
+			continue
 		}
-		items[i] = res
+		items = append(items, res)
 	}
 	return &pb.Order{
 		ID:         uuid.String(),

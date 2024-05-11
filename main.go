@@ -29,10 +29,11 @@ func main() {
 	}
 	defer conn.Close()
 
-	cli := pb.NewOrderServiceClient(conn)
+	orderCli := pb.NewOrderServiceClient(conn)
+	menuCli := pb.NewMenuServiceClient(conn)
 
 	mux := http.NewServeMux()
-	handler := NewHandler(cli)
+	handler := NewHandler(orderCli, menuCli)
 	handler.registerRoutes(mux)
 
 	log.Printf("[SYS] listening on :8888...")

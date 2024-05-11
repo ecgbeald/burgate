@@ -12,19 +12,45 @@ import (
 	"google.golang.org/grpc"
 )
 
-type grpc_handler struct {
+type grpc_order_handler struct {
 	store   OrderStore
 	service OrderService
 	ch      *amqp.Channel
 	pb.UnimplementedOrderServiceServer
 }
 
-func NewGRPCHandler(grpcServer *grpc.Server, store OrderStore, service OrderService, ch *amqp.Channel) {
-	handler := &grpc_handler{store: store, service: service, ch: ch}
-	pb.RegisterOrderServiceServer(grpcServer, handler)
+type grpc_menu_handler struct {
+	store OrderStore
+	pb.UnimplementedMenuServiceServer
 }
 
-func (gh *grpc_handler) CreateOrder(ctx context.Context, request *pb.CreateOrderRequest) (*pb.Order, error) {
+func NewGRPCHandler(grpcServer *grpc.Server, store OrderStore, service OrderService, ch *amqp.Channel) {
+	orderHandler := &grpc_order_handler{store: store, service: service, ch: ch}
+	menuHandler := &grpc_menu_handler{store: store}
+	pb.RegisterOrderServiceServer(grpcServer, orderHandler)
+	pb.RegisterMenuServiceServer(grpcServer, menuHandler)
+}
+
+func (gh *grpc_menu_handler) CreateMenuEntry(ctx context.Context, entries *pb.MenuEntries) (*pb.DbResponse, error) {
+	log.Print("Received: ", entries.Entries)
+	resp := "ok"
+	var menu []menu_entry_db
+	for _, entry := range entries.Entries {
+		menu = append(menu, menu_entry_db{Id: entry.ID, Name: entry.EntryName, Price_id: entry.EntryPriceID})
+	}
+	if err := gh.store.Create(ctx, &menu); err != nil {
+		return &pb.DbResponse{
+			Error:    true,
+			ErrorMsg: &resp,
+		}, nil
+	}
+	return &pb.DbResponse{
+		Error:    false,
+		ErrorMsg: &resp,
+	}, nil
+}
+
+func (gh *grpc_order_handler) CreateOrder(ctx context.Context, request *pb.CreateOrderRequest) (*pb.Order, error) {
 	log.Print("New order received from cust id: ", request.CustomerID)
 
 	o := convertItem(ctx, request, gh.store)

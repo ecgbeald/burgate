@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "github.com/ecgbeald/burgate";
+
+service MenuService {
+    rpc CreateMenuEntry(MenuEntries) returns (DbResponse);
+}
+
+message MenuEntries {
+    repeated MenuEntry Entries = 1;
+}
+
+message MenuEntry {
+    string ID = 1;
+    string EntryName = 2;
+    string EntryPriceID = 3;
+}
+
+message DbResponse {
+    bool Error = 1;
+    optional string ErrorMsg = 2;
+}

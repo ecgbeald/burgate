@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,7 +27,31 @@ func (s *store) GetMongoClient() *mongo.Client {
 	return s.mongoCli
 }
 
-func (s *store) Create(context.Context) error {
+func (s *store) Create(ctx context.Context, menu *[]menu_entry_db) error {
+	collection := s.mongoCli.Database("menu").Collection("menu")
+	for _, entry := range *menu {
+		filter := bson.D{{Key: "id", Value: entry.Id}}
+		update := bson.D{{Key: "$set", Value: entry}}
+		result, err := collection.UpdateOne(ctx, filter, update)
+		if err != nil {
+			log.Print("err when updating db: ", err)
+		}
+		if result.MatchedCount != 0 {
+			continue
+		}
+		_, err = collection.InsertOne(ctx, entry)
+		if err != nil {
+			log.Print("err when inserting into db: ", err)
+		}
+		log.Print("result:", result)
+
+	}
+	// menuInterface := []interface{}{*menu}
+	// result, err := collection.InsertMany(ctx, menuInterface)
+	// if err != nil {
+	// 	log.Print("err when creating...")
+	// }
+	// log.Print("result:", result)
 	return nil
 }
 

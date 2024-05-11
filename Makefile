@@ -1,7 +1,7 @@
 gen:
 	@protoc --go_out=. --go_opt=paths=source_relative \
 	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-	proto/item.proto
+	proto/*.proto
 
 gateway:
 	@go build -o bin/gateway .;./bin/gateway -local

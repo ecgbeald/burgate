@@ -130,10 +130,9 @@ func main() {
 	}()
 
 	store := NewStore(mongoCli)
-	store.Create(ctx)
 	service := NewOrderService(store, ch)
 
-	service.CreateOrder(context.Background())
+	// service.CreateOrder(context.Background())
 
 	NewGRPCHandler(grpcServer, store, service, ch)
 

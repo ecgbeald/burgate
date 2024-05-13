@@ -37,6 +37,8 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
+        environment:
+            - ADDR=nginx:443
         ports:
             - "8888:8888"
         restart: unless-stopped
@@ -45,33 +47,53 @@ services:
             - rabbitmq
         networks:
             - backend
-    order:
+    order-0:
         build:
             context: .
             dockerfile: order/Dockerfile
+        environment:
+            - PORT=8889
         restart: unless-stopped
         depends_on:
             - gateway
         networks:
             - backend
-    payment:
+    order-1:
         build:
             context: .
-            dockerfile: payment/Dockerfile
+            dockerfile: order/Dockerfile
+        environment:
+            - PORT=8889
         restart: unless-stopped
         depends_on:
             - gateway
         networks:
             - backend
-    kitchen:
-        build:
-            context: .
-            dockerfile: kitchen/Dockerfile
-        restart: unless-stopped
+    nginx:
+        build: nginx
         depends_on:
-            - gateway
+            - order-0
+            - order-1
         networks:
             - backend
+    # payment:
+    #     build:
+    #         context: .
+    #         dockerfile: payment/Dockerfile
+    #     restart: unless-stopped
+    #     depends_on:
+    #         - gateway
+    #     networks:
+    #         - backend
+    # kitchen:
+    #     build:
+    #         context: .
+    #         dockerfile: kitchen/Dockerfile
+    #     restart: unless-stopped
+    #     depends_on:
+    #         - gateway
+    #     networks:
+    #         - backend
 volumes:
     rabbitmq_data:
 

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
@@ -23,7 +24,9 @@ func main() {
 	}
 	grpcServer := grpc.NewServer()
 
-	l, err := net.Listen("tcp", ":8889")
+	port := os.Getenv("PORT")
+
+	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatal("failed to listen ", err)
 	}
@@ -136,7 +139,7 @@ func main() {
 
 	NewGRPCHandler(grpcServer, store, service, ch)
 
-	log.Printf("GRPC server started at 8889")
+	log.Printf("GRPC server started at %s", port)
 
 	if err := grpcServer.Serve(l); err != nil {
 		log.Fatal(err.Error())

@@ -76,24 +76,24 @@ services:
             - order-1
         networks:
             - backend
-    # payment:
-    #     build:
-    #         context: .
-    #         dockerfile: payment/Dockerfile
-    #     restart: unless-stopped
-    #     depends_on:
-    #         - gateway
-    #     networks:
-    #         - backend
-    # kitchen:
-    #     build:
-    #         context: .
-    #         dockerfile: kitchen/Dockerfile
-    #     restart: unless-stopped
-    #     depends_on:
-    #         - gateway
-    #     networks:
-    #         - backend
+    payment:
+        build:
+            context: .
+            dockerfile: payment/Dockerfile
+        restart: unless-stopped
+        depends_on:
+            - gateway
+        networks:
+            - backend
+    kitchen:
+        build:
+            context: .
+            dockerfile: kitchen/Dockerfile
+        restart: unless-stopped
+        depends_on:
+            - gateway
+        networks:
+            - backend
 volumes:
     rabbitmq_data:
 

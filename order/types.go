@@ -7,7 +7,6 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(context.Context) error
 }
 
 type OrderStore interface {

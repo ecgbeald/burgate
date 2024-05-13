@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// MENU
+
 type menu_entry_db struct {
 	Id       string
 	Name     string
@@ -46,12 +48,6 @@ func (s *store) Create(ctx context.Context, menu *[]menu_entry_db) error {
 		log.Print("result:", result)
 
 	}
-	// menuInterface := []interface{}{*menu}
-	// result, err := collection.InsertMany(ctx, menuInterface)
-	// if err != nil {
-	// 	log.Print("err when creating...")
-	// }
-	// log.Print("result:", result)
 	return nil
 }
 

@@ -135,8 +135,6 @@ func main() {
 	store := NewStore(mongoCli)
 	service := NewOrderService(store, ch)
 
-	// service.CreateOrder(context.Background())
-
 	NewGRPCHandler(grpcServer, store, service, ch)
 
 	log.Printf("GRPC server started at %s", port)

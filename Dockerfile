@@ -2,14 +2,14 @@ FROM golang:1.22-alpine
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY go.mod go.sum gateway-air.toml ./
+
+RUN go install github.com/cosmtrek/air@latest
 
 RUN go mod download
 
 COPY . .
 
-RUN go build -o main .
-
 EXPOSE 8888
 
-CMD ["/app/main"]
+CMD ["air", "-c", "gateway-air.toml"]

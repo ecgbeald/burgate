@@ -88,23 +88,23 @@ func main() {
 		defer cancel()
 		for d := range msgs {
 
-			var dat *pb.Order
-			err := json.Unmarshal(d.Body, &dat)
+			var order *pb.Order
+			err := json.Unmarshal(d.Body, &order)
 			if err != nil {
 				log.Print("Received message cannot be parsed by JSON: ", err)
 				continue
 			}
-			log.Printf("Received a message: %s", dat)
+			log.Printf("Received a message: %s", order)
 			log.Printf("Waiting for payment...")
 			time.Sleep(4 * time.Second)
-			dat.Status = "Paid"
+			order.Status = "Paid"
 
 			d.Ack(false)
 
 			err = ch.ExchangeDeclare("paid", "fanout", true, false, false, false, nil)
 			failOnError(err, "failed to declare paid exchange")
 
-			body, err := json.Marshal(dat)
+			body, err := json.Marshal(order)
 			if err != nil {
 				failOnError(err, "failed to marshal JSON")
 			}

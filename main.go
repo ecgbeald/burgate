@@ -13,6 +13,7 @@ import (
 
 func main() {
 	status := flag.Bool("local", false, "toggle for local deployment")
+
 	flag.Parse()
 	if *status {
 		log.Print("Running Locally")
@@ -28,7 +29,7 @@ func main() {
 		conn, err = grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	if err != nil {
-		log.Fatal("Fail to dial server", err)
+		log.Fatal("Fail to dial server: ", err)
 	}
 	defer conn.Close()
 

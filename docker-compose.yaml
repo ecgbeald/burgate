@@ -47,6 +47,8 @@ services:
             - rabbitmq
         networks:
             - backend
+        volumes:
+          - ./:/app
     order-0:
         build:
             context: .
@@ -58,6 +60,8 @@ services:
             - gateway
         networks:
             - backend
+        volumes:
+            - ./:/app
     order-1:
         build:
             context: .
@@ -69,6 +73,8 @@ services:
             - gateway
         networks:
             - backend
+        volumes:
+            - ./:/app
     nginx:
         build: nginx
         depends_on:
@@ -85,6 +91,8 @@ services:
             - gateway
         networks:
             - backend
+        volumes:
+          - ./:/app
     kitchen:
         build:
             context: .
@@ -94,6 +102,8 @@ services:
             - gateway
         networks:
             - backend
+        volumes:
+          - ./:/app
 volumes:
     rabbitmq_data:
 

@@ -41,10 +41,11 @@ func main() {
 		mongoClientOptions = options.Client().ApplyURI("mongodb://admin:admin@localhost:27017")
 	} else {
 		mongoClientOptions = options.Client().ApplyURI("mongodb://admin:admin@mongo:27017")
-
 	}
+
 	mongoCli, err := mongo.Connect(ctx, mongoClientOptions)
-	failOnError(err, "Failed to connect to MongoDB")
+	defer mongoCli.Disconnect(ctx)
+	failOnError(err, "Failed to connect to MongoDB...")
 
 	err = mongoCli.Ping(ctx, nil)
 	failOnError(err, "Failed to ping MongoDB")

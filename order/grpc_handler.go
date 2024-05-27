@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"os"
 	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
@@ -105,9 +106,10 @@ func convertItem(ctx context.Context, request *pb.CreateOrderRequest, store Orde
 		items = append(items, res)
 	}
 	return &pb.Order{
-		ID:         uuid.String(),
-		CustomerID: custID,
-		Status:     "Ordered",
-		Items:      items,
+		ID:             uuid.String(),
+		CustomerID:     custID,
+		Status:         "Ordered",
+		Items:          items,
+		OrderMachineID: os.Getenv("ID"),
 	}
 }

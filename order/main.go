@@ -78,7 +78,7 @@ func main() {
 
 	err = ch.ExchangeDeclare(
 		"paid",
-		"fanout",
+		"direct",
 		true,
 		false,
 		false,
@@ -100,7 +100,7 @@ func main() {
 	log.Printf("Binding queue %s to exchange %s with no route key", q.Name, "paid")
 	err = ch.QueueBind(
 		q.Name,
-		"",
+		os.Getenv("ID"),
 		"paid",
 		false,
 		nil,

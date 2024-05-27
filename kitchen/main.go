@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"log"
+	"os"
+	"strconv"
 	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
@@ -40,7 +42,7 @@ func main() {
 	// consumer might exist before the producer, make sure queue exists before consuming msg
 	err = ch.ExchangeDeclare(
 		"paid",
-		"fanout",
+		"direct",
 		true,
 		false,
 		false,
@@ -59,15 +61,22 @@ func main() {
 	)
 	failOnError(err, "Failed to delare a queue")
 
-	log.Printf("Binding queue %s to exchange %s with no route key", q.Name, "paid")
-	err = ch.QueueBind(
-		q.Name,
-		"",
-		"paid",
-		false,
-		nil,
-	)
-	failOnError(err, "Failed to bind a queue")
+	orderNodeCnt, err := strconv.Atoi(os.Getenv("ORDERNODECNT"))
+	if err != nil {
+		log.Panicf("Environment variable not parsed correctly: %s", err)
+	}
+	log.Printf("Binding queue %s to exchange %s with %d route key", q.Name, "paid", orderNodeCnt)
+
+	for i := 0; i < orderNodeCnt; i++ {
+		err = ch.QueueBind(
+			q.Name,
+			strconv.Itoa(i),
+			"paid",
+			false,
+			nil,
+		)
+		failOnError(err, "Failed to bind a queue")
+	}
 
 	msgs, err := ch.Consume(
 		q.Name,

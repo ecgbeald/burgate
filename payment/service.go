@@ -101,7 +101,7 @@ func main() {
 
 			d.Ack(false)
 
-			err = ch.ExchangeDeclare("paid", "fanout", true, false, false, false, nil)
+			err = ch.ExchangeDeclare("paid", "direct", true, false, false, false, nil)
 			failOnError(err, "failed to declare paid exchange")
 
 			body, err := json.Marshal(order)
@@ -109,7 +109,7 @@ func main() {
 				failOnError(err, "failed to marshal JSON")
 			}
 
-			err = ch.PublishWithContext(ctx, "paid", "", false, false, amqp.Publishing{
+			err = ch.PublishWithContext(ctx, "paid", order.GetOrderMachineID(), false, false, amqp.Publishing{
 				ContentType: "application/json",
 				Body:        body,
 			})

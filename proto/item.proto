@@ -29,4 +29,5 @@ message Order {
     string customerID = 2;
     string Status = 3;
     repeated Item Items = 4;
+    string orderMachineID = 5;
 }

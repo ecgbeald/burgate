@@ -4,6 +4,11 @@ services:
         ports:
           - "5672:5672"
           - "15672:15672"
+        healthcheck:
+            test: rabbitmq-diagnostics -q ping
+            interval: 5s
+            timeout: 5s
+            retries: 3
         volumes:
           - "rabbitmq_data:/data"
         networks:
@@ -43,8 +48,10 @@ services:
             - "8888:8888"
         restart: unless-stopped
         depends_on:
-            - mongo-express
-            - rabbitmq
+            rabbitmq:
+                condition: service_healthy
+            mongo-express:
+                condition: service_started
         networks:
             - backend
         volumes:

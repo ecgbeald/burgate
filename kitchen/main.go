@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"log"
@@ -10,7 +11,17 @@ import (
 
 	pb "github.com/ecgbeald/burgate/proto"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
+
+type handler struct {
+	client pb.OrderServiceClient
+}
+
+func NewHandler(client pb.OrderServiceClient) *handler {
+	return &handler{client: client}
+}
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -104,6 +115,22 @@ func main() {
 			log.Printf("Cooking...")
 			time.Sleep(5 * time.Second)
 			d.Ack(false)
+
+			dat.Status = "Finished"
+
+			addr := "order-" + dat.OrderMachineID + ":8889"
+			log.Println("Connecting to ", addr)
+			conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if err != nil {
+				log.Fatalln("Failed to connect to", addr, ", error: ", err)
+			}
+			cli := pb.NewOrderServiceClient(conn)
+			handler := NewHandler(cli)
+			_, err = handler.client.ReceiveCookedOrder(context.Background(), dat)
+			if err != nil {
+				log.Panic("Error sending cooked order: ", err)
+			}
+			conn.Close()
 		}
 	}()
 

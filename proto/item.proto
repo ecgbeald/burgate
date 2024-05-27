@@ -1,10 +1,11 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 
 option go_package = "github.com/ecgbeald/burgate";
 
 service OrderService {
     rpc CreateOrder(CreateOrderRequest) returns (Order);
-
+    rpc ReceiveCookedOrder(Order) returns (google.protobuf.Empty);
 }
 
 message Item {

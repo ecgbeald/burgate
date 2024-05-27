@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type grpc_order_handler struct {
@@ -78,6 +79,12 @@ func (gh *grpc_order_handler) CreateOrder(ctx context.Context, request *pb.Creat
 	log.Printf(" [x] Sent %s \n", body)
 
 	return o, nil
+}
+
+func (gh *grpc_order_handler) ReceiveCookedOrder(ctx context.Context, order *pb.Order) (*emptypb.Empty, error) {
+	log.Print("Received: ", order)
+	// TODO
+	return &emptypb.Empty{}, nil
 }
 
 func validateQuery(ctx context.Context, store OrderStore, item *pb.ItemsWithQuantity) (*pb.Item, error) {

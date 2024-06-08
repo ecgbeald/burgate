@@ -98,7 +98,7 @@ func validateEntries(entries []*pb.MenuEntry) error {
 			return errors.New("entry name is required")
 		}
 
-		if i.EntryPriceID == "" {
+		if i.Price == "" {
 			return errors.New("entry price ID is required")
 		}
 	}

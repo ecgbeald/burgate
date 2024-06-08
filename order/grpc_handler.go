@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
+	"github.com/ecgbeald/burgate/stripe"
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/grpc"
@@ -38,7 +40,15 @@ func (gh *grpc_menu_handler) CreateMenuEntry(ctx context.Context, entries *pb.Me
 	resp := "ok"
 	var menu []menu_entry_db
 	for _, entry := range entries.Entries {
-		menu = append(menu, menu_entry_db{Id: entry.ID, Name: entry.EntryName, Price_id: entry.EntryPriceID})
+		price, err := strconv.Atoi(entry.Price)
+		if err != nil {
+			continue // bad format, ignore
+		}
+		priceID, err := stripe.CreateStripeProduct(entry.EntryName, int64(price))
+		if err != nil {
+			log.Println("stripe error: ", err)
+		}
+		menu = append(menu, menu_entry_db{Id: entry.ID, Name: entry.EntryName, Price: entry.Price, PriceID: priceID})
 	}
 	if err := gh.store.Create(ctx, &menu); err != nil {
 		return &pb.DbResponse{
@@ -96,7 +106,7 @@ func validateQuery(ctx context.Context, store OrderStore, item *pb.ItemsWithQuan
 		ID:       item.ID,
 		Name:     result.Name,
 		Quantity: item.Quantity,
-		PriceID:  result.Price_id,
+		PriceID:  result.PriceID, // TODO
 	}, nil
 }
 

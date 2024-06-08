@@ -8,6 +8,7 @@ import (
 	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
+	"github.com/ecgbeald/burgate/stripe"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -95,6 +96,12 @@ func main() {
 				continue
 			}
 			log.Printf("Received a message: %s", order)
+			url, err := stripe.CreatePaymentLink(order.Items)
+			if err != nil {
+				log.Print("Error from Stripe: ", err)
+				continue
+			}
+			log.Println("Payment URL: ", url)
 			log.Printf("Waiting for payment...")
 			time.Sleep(4 * time.Second)
 			order.Status = "Paid"

@@ -13,7 +13,7 @@ message MenuEntries {
 message MenuEntry {
     string ID = 1;
     string EntryName = 2;
-    string EntryPriceID = 3;
+    string Price = 3;
 }
 
 message DbResponse {

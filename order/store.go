@@ -12,9 +12,10 @@ import (
 // MENU
 
 type menu_entry_db struct {
-	Id       string
-	Name     string
-	Price_id string
+	Id      string
+	Name    string
+	Price   string
+	PriceID string
 }
 
 type store struct {

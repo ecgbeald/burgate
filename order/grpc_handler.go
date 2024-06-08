@@ -9,7 +9,7 @@ import (
 	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
-	"github.com/ecgbeald/burgate/stripe"
+	stripe "github.com/ecgbeald/burgate/stripe_service/utils"
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/grpc"

@@ -11,3 +11,5 @@ Use gRPC and RabbitMQ for inter-service communications. The project aims to be p
 4. Centralised Kitchen
 5. Everything docker containerised
 6. MongoDB
+7. Redis for caching
+8. Stripe Payment API + Webhook

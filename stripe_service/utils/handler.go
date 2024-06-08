@@ -1,7 +1,11 @@
 package stripe
 
 import (
+	"log"
+	"os"
+
 	pb "github.com/ecgbeald/burgate/proto"
+	"github.com/joho/godotenv"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/paymentlink"
 	"github.com/stripe/stripe-go/v78/price"
@@ -9,7 +13,11 @@ import (
 )
 
 func CreateStripeProduct(name string, item_price int64) (string, error) {
-	stripe.Key = "VERY SECRET KEY"
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env")
+	}
+	stripe.Key = os.Getenv("STRIPE_API_KEY")
 	params := &stripe.ProductParams{Name: stripe.String(name)}
 	product, err := product.New(params)
 	if err != nil {
@@ -23,8 +31,13 @@ func CreateStripeProduct(name string, item_price int64) (string, error) {
 	return product_price.ID, nil
 }
 
-func CreatePaymentLink(items []*pb.Item) (string, error) {
-	stripe.Key = "VERY SECRET KEY"
+func CreatePaymentLink(order *pb.Order) (string, error) {
+	items := order.Items
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env")
+	}
+	stripe.Key = os.Getenv("STRIPE_API_KEY")
 	line_items := []*stripe.PaymentLinkLineItemParams{}
 	for _, item := range items {
 		line_items = append(line_items, &stripe.PaymentLinkLineItemParams{
@@ -32,8 +45,10 @@ func CreatePaymentLink(items []*pb.Item) (string, error) {
 			Quantity: stripe.Int64(int64(item.Quantity)),
 		})
 	}
+
 	result, err := paymentlink.New(&stripe.PaymentLinkParams{
 		LineItems: line_items,
+		Metadata:  map[string]string{"order_id": order.ID},
 	})
 	if err != nil {
 		return "", err

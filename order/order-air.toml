@@ -6,7 +6,7 @@ cmd = "go build -o ./tmp/main ./order"
 bin = "tmp/main"
 full_bin = "APP_USER=air ./tmp/main"
 include_ext = ["go", "tpl", "tmpl", "html"]
-exclude_dir = ["assets", "tmp", "vendor", "kitchen", "local", "payment", "proto"]
+exclude_dir = ["assets", "tmp", "vendor", "kitchen", "local", "payment", "proto", "stripe_service"]
 include_dir = ["order"]
 # Watch these files.
 include_file = []

@@ -5,21 +5,21 @@ tmp_dir = "tmp"
 # Array of commands to run before each build
 # pre_cmd = ["echo 'hello air' > pre_cmd.txt"]
 # Just plain old shell command. You could use `make` as well.
-cmd = "go build -o ./tmp/main ."
+cmd = "go build -o ./tmp/server ./stripe_service"
 # Array of commands to run after ^C
 # post_cmd = ["echo 'hello air' > post_cmd.txt"]
 # Binary file yields from `cmd`.
-bin = "tmp/main"
+bin = "tmp/server"
 # Customize binary, can setup environment variables when run your app.
-full_bin = "APP_USER=air ./tmp/main"
+full_bin = "APP_USER=air ./tmp/server"
 # Add additional arguments when running binary (bin/full_bin). Will run './tmp/main hello world'.
 # args_bin = ["hello", "world"]
 # Watch these filename extensions.
 include_ext = ["go", "tpl", "tmpl", "html"]
 # Ignore these filename extensions or directories.
-exclude_dir = ["assets", "tmp", "vendor", "kitchen", "local", "order", "payment", "proto", "stripe_service"]
+exclude_dir = ["assets", "tmp", "vendor", "kitchen", "local", "order", "proto","payment"]
 # Watch these directories if you specified.
-include_dir = []
+include_dir = ["stripe_service"]
 # Watch these files.
 include_file = []
 # Exclude files.

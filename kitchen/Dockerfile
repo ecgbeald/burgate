@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY go.mod go.sum kitchen/kitchen-air.toml ./
 
-RUN go install github.com/cosmtrek/air@latest
+RUN go install github.com/air-verse/air@latest
 
 RUN go mod download
 

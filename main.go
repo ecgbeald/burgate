@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -12,22 +11,11 @@ import (
 )
 
 func main() {
-	status := flag.Bool("local", false, "toggle for local deployment")
-
-	flag.Parse()
-	if *status {
-		log.Print("Running Locally")
-	}
-
 	addr := os.Getenv("ADDR")
 
 	var conn *grpc.ClientConn
 	var err error
-	if *status {
-		conn, err = grpc.Dial(":8889", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	} else {
-		conn, err = grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	}
+	conn, err = grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal("Fail to dial server: ", err)
 	}

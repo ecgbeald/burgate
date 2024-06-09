@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"log"
 	"net"
 	"os"
 	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
+	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -17,12 +17,10 @@ import (
 )
 
 func main() {
-	status := flag.Bool("local", false, "toggle for local deployment")
-	flag.Parse()
-	if *status {
-		log.Print("Running Locally")
-	}
 	grpcServer := grpc.NewServer()
+
+	err := godotenv.Load(".env")
+	failOnError(err, "Failed to read .env file")
 
 	port := os.Getenv("PORT")
 
@@ -36,13 +34,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var mongoClientOptions *options.ClientOptions
-	if *status {
-		mongoClientOptions = options.Client().ApplyURI("mongodb://admin:admin@localhost:27017")
-	} else {
-		mongoClientOptions = options.Client().ApplyURI("mongodb://admin:admin@mongo:27017")
-	}
-
+	mongoClientOptions := options.Client().ApplyURI("mongodb://" + os.Getenv("MONGODB_USERNAME") + ":" + os.Getenv("MONGODB_PASS") + "@mongo:27017")
 	mongoCli, err := mongo.Connect(ctx, mongoClientOptions)
 	defer mongoCli.Disconnect(ctx)
 	failOnError(err, "Failed to connect to MongoDB...")
@@ -53,11 +45,8 @@ func main() {
 	log.Println("Connected to MongoDB")
 
 	var conn *amqp.Connection
-	if *status {
-		conn, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
-	} else {
-		conn, err = amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
-	}
+
+	conn, err = amqp.Dial("amqp://" + os.Getenv("RABBITMQ_USERNAME") + ":" + os.Getenv("RABBITMQ_PASS") + "@rabbitmq:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 

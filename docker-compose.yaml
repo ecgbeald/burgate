@@ -106,7 +106,8 @@ services:
             dockerfile: payment/Dockerfile
         restart: unless-stopped
         depends_on:
-            - gateway
+            rabbitmq:
+                condition: service_healthy
         networks:
             - backend
         volumes:
@@ -119,7 +120,8 @@ services:
             - ORDERNODECNT=2
         restart: unless-stopped
         depends_on:
-            - gateway
+            rabbitmq:
+                condition: service_healthy
         networks:
             - backend
         volumes:

@@ -24,7 +24,11 @@ func main() {
 		log.Fatal("Error loading .env")
 	}
 	stripe.Key = os.Getenv("STRIPE_API_KEY")
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	err = godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Failed to read .env file", err)
+	}
+	conn, err := amqp.Dial("amqp://" + os.Getenv("RABBITMQ_USERNAME") + ":" + os.Getenv("RABBITMQ_PASS") + "@localhost:5672/")
 	if err != nil {
 		log.Panicf("%s: %s", "Failed to connect to RabbitMQ", err)
 	}
@@ -45,6 +49,7 @@ func main() {
 
 	webhookHandler := func(w http.ResponseWriter, req *http.Request) {
 		stripe.Key = os.Getenv("STRIPE_API_KEY")
+		log.Println("hi")
 
 		const MaxBodyBytes = int64(65536)
 		req.Body = http.MaxBytesReader(w, req.Body, MaxBodyBytes)
@@ -56,7 +61,7 @@ func main() {
 		}
 
 		// This is your Stripe CLI webhook secret for testing your endpoint locally.
-		endpointSecret := "whsec_f866bf06ac27f0dc136228f2c6f492e0633cf32f93523b9e7f3b91c01481a3c4"
+		endpointSecret := os.Getenv("STRIPE_ENDPOINT_SECRET")
 		// Pass the request body and Stripe-Signature header to ConstructEvent, along
 		// with the webhook signing key.
 		event, err := webhook.ConstructEvent(payload, req.Header.Get("Stripe-Signature"),
@@ -70,7 +75,6 @@ func main() {
 
 		// Unmarshal the event data into an appropriate struct depending on its Type
 		switch event.Type {
-		// case "payment_intent.succeeded":
 		// Then define and call a function to handle the event payment_intent.succeeded
 		// ... handle other event types
 		case "checkout.session.completed":

@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"log"
+	"os"
 
 	pb "github.com/ecgbeald/burgate/proto"
 	stripe "github.com/ecgbeald/burgate/stripe_service/utils"
+	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 )
@@ -19,18 +20,11 @@ func failOnError(err error, msg string) {
 }
 
 func main() {
-	status := flag.Bool("local", false, "toggle for local deployment")
-	flag.Parse()
-	if *status {
-		log.Print("Running Locally")
-	}
 	var conn *amqp.Connection
 	var err error
-	if *status {
-		conn, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
-	} else {
-		conn, err = amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
-	}
+	err = godotenv.Load(".env")
+	failOnError(err, "Failed to read .env file")
+	conn, err = amqp.Dial("amqp://" + os.Getenv("RABBITMQ_USERNAME") + ":" + os.Getenv("RABBITMQ_PASS") + "@rabbitmq:5672/")
 
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()

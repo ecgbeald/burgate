@@ -7,9 +7,8 @@ Use gRPC and RabbitMQ for inter-service communications. The project aims to be p
 #### Main Features:
 1. Gateway functions as an entry point for customers, provides ordering api and menu altering api.
 2. Scalable ordering microservice, use Nginx to load balance, similar to real-life ordering machines.
-3. Payment system
+3. Stripe Payment API + Webhook
 4. Centralised Kitchen
 5. Everything docker containerised
 6. MongoDB
 7. Redis for caching
-8. Stripe Payment API + Webhook

@@ -49,7 +49,6 @@ func main() {
 
 	webhookHandler := func(w http.ResponseWriter, req *http.Request) {
 		stripe.Key = os.Getenv("STRIPE_API_KEY")
-		log.Println("hi")
 
 		const MaxBodyBytes = int64(65536)
 		req.Body = http.MaxBytesReader(w, req.Body, MaxBodyBytes)
@@ -75,8 +74,7 @@ func main() {
 
 		// Unmarshal the event data into an appropriate struct depending on its Type
 		switch event.Type {
-		// Then define and call a function to handle the event payment_intent.succeeded
-		// ... handle other event types
+
 		case "checkout.session.completed":
 			log.Println("Checkout Complete")
 			var session stripe.CheckoutSession

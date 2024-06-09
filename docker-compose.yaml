@@ -5,10 +5,10 @@ services:
           - "5672:5672"
           - "15672:15672"
         healthcheck:
-            test: rabbitmq-diagnostics -q ping
-            interval: 5s
-            timeout: 5s
-            retries: 3
+            test: rabbitmq-diagnostics check_port_connectivity
+            interval: 1s
+            timeout: 3s
+            retries: 30
         volumes:
           - "rabbitmq_data:/data"
         networks:
@@ -16,20 +16,22 @@ services:
     mongo:
         image: mongo
         environment:
-            - MONGO_INITDB_ROOT_USERNAME=admin
-            - MONGO_INITDB_ROOT_PASSWORD=admin
+            - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASS}
         ports:
             - "27017:27017"
         networks:
             - backend
+        env_file:
+            - ".env"
     mongo-express:
         image: mongo-express
         environment:
             - ME_CONFIG_MONGODB_SERVER=mongo
             - ME_CONFIG_MONGODB_PORT=27017
             - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
-            - ME_CONFIG_MONGODB_AUTH_USERNAME=admin
-            - ME_CONFIG_MONGODB_AUTH_PASSWORD=admin
+            - ME_CONFIG_MONGODB_AUTH_USERNAME=${MONGODB_USERNAME}
+            - ME_CONFIG_MONGODB_AUTH_PASSWORD=${MONGODB_PASS}
             - ME_CONFIG_BASICAUTH_USERNAME=dev
             - ME_CONFIG_BASICAUTH_PASSWORD=dev
         depends_on:
@@ -38,6 +40,8 @@ services:
             - "7777:8081"
         networks:
             - backend
+        env_file:
+            - ".env"
     redis-payment:
         image: redis:7.0-alpine
         restart: always
@@ -111,7 +115,7 @@ services:
         networks:
             - backend
         volumes:
-          - ./:/app
+            - ./:/app
     kitchen:
         build:
             context: .
@@ -126,16 +130,23 @@ services:
             - backend
         volumes:
           - ./:/app
-    # stripe-server:
-    #     build:
-    #         context: .
-    #         dockerfile: stripe_service/Dockerfile
-    #     restart: unless-stopped
-    #     depends_on:
-    #         - kitchen
-    #     network_mode: "host"
-    #     volumes:
-    #       - ./:/app
+    stripe-server:
+        build:
+            context: .
+            dockerfile: stripe_service/Dockerfile
+        restart: unless-stopped
+        depends_on:
+            - kitchen
+        network_mode: "host"
+        volumes:
+            - ./:/app
+    stripe-cli:
+        image: stripe/stripe-cli
+        container_name: stripe-cli
+        command: "listen --api-key {STRIPE_API_KEY} --device-name docker --forward-to localhost:4242/webhook"
+        network_mode: "host"
+        env_file:
+            - ".env"
 volumes:
     rabbitmq_data:
     redis_data:

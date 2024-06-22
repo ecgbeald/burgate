@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	pb "github.com/ecgbeald/burgate/proto"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/grpc"
@@ -30,6 +31,12 @@ func failOnError(err error, msg string) {
 }
 
 func main() {
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
 	var conn *amqp.Connection
 	var err error
 	err = godotenv.Load(".env")
@@ -105,27 +112,31 @@ func main() {
 			}
 			log.Printf("Received a message: %s", dat)
 			log.Printf("Cooking...")
-			time.Sleep(5 * time.Second)
-			d.Ack(false)
+			r.GET("/order/"+dat.ID, func(c *gin.Context) {
+				c.JSON(http.StatusOK, dat)
+			})
+			r.POST("/order/"+dat.ID, func(ctx *gin.Context) {
+				d.Ack(false)
+				dat.Status = "Finished"
 
-			dat.Status = "Finished"
-
-			addr := "order-" + dat.OrderMachineID + ":8889"
-			log.Println("Connecting to ", addr)
-			conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-			if err != nil {
-				log.Fatalln("Failed to connect to", addr, ", error: ", err)
-			}
-			cli := pb.NewOrderServiceClient(conn)
-			handler := NewHandler(cli)
-			_, err = handler.client.ReceiveCookedOrder(context.Background(), dat)
-			if err != nil {
-				log.Panic("Error sending cooked order: ", err)
-			}
-			conn.Close()
+				addr := "order-" + dat.OrderMachineID + ":8889"
+				log.Println("Connecting to", addr)
+				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				if err != nil {
+					log.Fatalln("Failed to connect to", addr, ", error: ", err)
+				}
+				cli := pb.NewOrderServiceClient(conn)
+				handler := NewHandler(cli)
+				_, err = handler.client.ReceiveCookedOrder(context.Background(), dat)
+				if err != nil {
+					log.Panic("Error sending cooked order: ", err)
+				}
+				conn.Close()
+			})
 		}
 	}()
 
 	log.Printf("[*] Waiting...")
+	r.Run(":8080")
 	<-forever
 }

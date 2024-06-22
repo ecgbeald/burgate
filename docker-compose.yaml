@@ -45,12 +45,18 @@ services:
     redis-payment:
         image: redis:7.0-alpine
         restart: always
-        ports:
-          - '6379:6379'
         volumes:
-          - "redis_data:/data"
+          - "redis_payment_data:/data"
         networks:
             - backend
+    redis-kitchen:
+        image: redis:7.0-alpine
+        restart: always
+        volumes:
+          - "redis_kitchen_data:/data"
+        networks:
+            - backend
+
     gateway:
         build:
             context: .
@@ -151,7 +157,8 @@ services:
             - ".env"
 volumes:
     rabbitmq_data:
-    redis_data:
+    redis_payment_data:
+    redis_kitchen_data:
 
 networks:
   backend:

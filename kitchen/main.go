@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -48,6 +49,29 @@ func main() {
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
+
+	redis_client := redis.NewClient(&redis.Options{
+		Addr:     "redis-kitchen:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	r.GET("/order", func(ctx *gin.Context) {
+		var keys []string
+		iter := redis_client.Scan(context.Background(), 0, "*", 0).Iterator()
+		for iter.Next(context.Background()) {
+			keys = append(keys, iter.Val())
+		}
+		if err := iter.Err(); err != nil {
+			failOnError(err, "failed to scan in Redis")
+		}
+		ctx.JSON(http.StatusOK, gin.H{"orders": keys})
+	})
+
+	_, err = redis_client.Ping(context.Background()).Result()
+	failOnError(err, "Failed to connect to Redis")
+
+	log.Println("Connected to Redis")
 
 	// consumer might exist before the producer, make sure queue exists before consuming msg
 	err = ch.ExchangeDeclare(
@@ -111,13 +135,17 @@ func main() {
 				continue
 			}
 			log.Printf("Received a message: %s", dat)
+			err = redis_client.Set(context.Background(), dat.ID, d.Body, 0).Err()
+			failOnError(err, "Failed to set in redis")
 			log.Printf("Cooking...")
 			r.GET("/order/"+dat.ID, func(c *gin.Context) {
 				c.JSON(http.StatusOK, dat)
 			})
 			r.POST("/order/"+dat.ID, func(ctx *gin.Context) {
 				d.Ack(false)
-				dat.Status = "Finished"
+				dat.Status = "Finished" // paid
+				err = redis_client.Del(context.Background(), dat.ID).Err()
+				failOnError(err, "Failed to delete entry in redis")
 
 				addr := "order-" + dat.OrderMachineID + ":8889"
 				log.Println("Connecting to", addr)

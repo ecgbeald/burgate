@@ -2,6 +2,8 @@
 
 A distributed system that mimics a fast-food ordering, cooking and pick-up services. 
 
+![plot](arch.png)
+
 Use gRPC and RabbitMQ for inter-service communications. The project aims to be practical, but the main goal is for me to try and integrate different microservices.
 
 #### Main Features:
